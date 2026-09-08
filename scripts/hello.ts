@@ -1,6 +1,6 @@
 
 
-function greet (name:string) {
+function greet (name:string) : string {
 
     return `checking ${name} for problems`
 }
