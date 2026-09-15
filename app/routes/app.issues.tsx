@@ -1,5 +1,6 @@
 
 import ScoreCard from "app/components/ScoreCard"
+import prisma from "app/db.server";
 import type {
  
   LoaderFunctionArgs,
@@ -11,7 +12,8 @@ import { useLoaderData } from "react-router";
 // as a background job — this runs on every page load and must stay fast.
 
 export const loader = async ({ request }: LoaderFunctionArgs) => { 
-  const {admin}=await authenticate.admin(request);
+ const {admin, session}=await authenticate.admin(request);
+  const shop = session.shop;
 const response = await admin.graphql(
     `#graphql
      query {
@@ -26,21 +28,43 @@ const response = await admin.graphql(
 }`)
 
  const responseJson = await response.json();
-  return responseJson;
+const products = responseJson.data.products.nodes;
+
+for (const p of products) {
+  await prisma.productSnapshot.upsert({
+    where: { shop_productGid: { shop, productGid: p.id } },
+    update: { title : p.title,
+      description: p.description,
+      fetchedAt: new Date(),
+    },
+    create: { shop: shop,
+      productGid: p.id,
+      title: p.title,
+      description: p.description,
+      fetchedAt: new Date(),
+    },
+  })
+}
+ const saved = await prisma.productSnapshot.findMany({
+  where: { shop },
+  orderBy: { title: "asc" },
+})
+
+return { products: saved }
+  
 };
 
 
-type Product = {
 
-    id : string;
-    title : string;
-    description : string;
-}
 
-export default function IssuesPage() {
-    const faultyProducts = useLoaderData<typeof loader>();
-    console.log(faultyProducts);
-   const products:Product[] = faultyProducts.data.products.nodes;
+  export default function IssuesPage() {
+  
+      const {products} = useLoaderData<typeof loader>();
+    if (products.length==0) return (
+      <ErrorBoundary/>
+    )
+   
+else 
 return(<s-page heading="Issues">
     <s-section heading="product issues">
       <ScoreCard score={58} productCount={214}/>
@@ -49,4 +73,14 @@ return(<s-page heading="Issues">
     )}
     </s-section>
 </s-page>)
+}
+
+export function ErrorBoundary() {
+  return (
+    <s-page heading="Something went wrong">
+      <s-section>
+        <s-paragraph>We could not load your products. Please try again.</s-paragraph>
+      </s-section>
+    </s-page>
+  )
 }

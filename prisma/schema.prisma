@@ -33,7 +33,7 @@ model Session {
   refreshTokenExpires DateTime?
 }
 
-model productSnapshot {
+model ProductSnapshot {
 
 
 shop String 
@@ -48,4 +48,19 @@ vendor String?
 fetchedAt DateTime
 @@unique([shop, productGid])
 @@index([shop])
+  issues Issue[]
+}
+
+model Issue {
+  id        String          @id @default(uuid())
+  product   ProductSnapshot @relation(fields: [productId], references: [id])
+  productId String
+  shop String
+  ruleId String
+  severity String
+  currentValue String?
+  status String @default("open")
+  foundAt DateTime @default(now())
+    @@unique([shop, productId, ruleId])
+  @@index([shop])
 }
