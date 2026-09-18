@@ -11,6 +11,10 @@ import { useLoaderData } from "react-router";
 // Only fetches 5 products for now. Full catalogue scan comes later,
 // as a background job — this runs on every page load and must stay fast.
 
+
+
+
+
 export const loader = async ({ request }: LoaderFunctionArgs) => { 
  const {admin, session}=await authenticate.admin(request);
   const shop = session.shop;
@@ -84,3 +88,4 @@ export function ErrorBoundary() {
     </s-page>
   )
 }
+
