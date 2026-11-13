@@ -12,11 +12,8 @@ import { useLoaderData } from "react-router";
 // as a background job — this runs on every page load and must stay fast.
 
 
-
-
-
 export const loader = async ({ request }: LoaderFunctionArgs) => { 
- const {admin, session}=await authenticate.admin(request);
+ const {admin, session}=await authenticate.admin(request); // check everysingle time when a request made to our app. to authenticate if it is actually from shopify
   const shop = session.shop;
 const response = await admin.graphql(
     `#graphql
